@@ -123,6 +123,18 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+        mToggleView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                for (SeekBar seekBar : mDurationSeekbars) {
+                    seekBar.setProgress(mDurationSeekbars.get(0).getProgress());
+                }
+                for (SeekBar seekBar : mTimingOffsetSeekbars) {
+                    seekBar.setProgress(mTimingOffsetSeekbars.get(0).getProgress());
+                }
+                return false;
+            }
+        });
         mTogglePlay.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -142,6 +154,8 @@ public class MainActivity extends AppCompatActivity
         createDurationSeekbars();
 
         initDrawableGrid();
+
+
     }
 
     private void initDrawableGrid() {
