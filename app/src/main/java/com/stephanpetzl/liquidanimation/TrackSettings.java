@@ -1,10 +1,12 @@
 package com.stephanpetzl.liquidanimation;
 
+import java.io.Serializable;
+
 /**
  * Created by steph on 03/03/17.
  */
 
-public class TrackSettings {
+public class TrackSettings implements Serializable {
 
     public static final float MAX_TIMING_OFFSET = 500;
     public static final float MAX_DURATION = 500;
@@ -12,7 +14,7 @@ public class TrackSettings {
 
     public final int arduinoPin;
     public int trackNumber;
-    public String pattern;
+    public String pattern = "_____x_____x________";
     public float timingOffsetMillis;
     public float durationMillis;
 

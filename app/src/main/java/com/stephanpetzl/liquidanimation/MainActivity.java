@@ -7,7 +7,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,6 +15,8 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
+
+import com.stephanpetzl.liquidanimation.util.Tools;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         stopSequencer();
         mBluetooth.close();
+        Tools.putPreference(this, Static.TRACK_SETTINGS, mTrackSettings);
         super.onStop();
     }
 
@@ -111,8 +113,6 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        mGridView.setPattern(createInitPattern());
-
         mToggleView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -140,13 +140,39 @@ public class MainActivity extends AppCompatActivity
         initTrackSettings();
         createTimingOffsetSeekbars();
         createDurationSeekbars();
+
+        initDrawableGrid();
+    }
+
+    private void initDrawableGrid() {
+        mGridView.setOnDrawableGridChangedListener(new DrawableGridView.OnDrawableGridChanged() {
+            @Override
+            public void onDrawableGridChanged(int trackNum, int col, boolean value) {
+                TrackSettings trackSettings = mTrackSettings.get(trackNum);
+                char[] pattern = trackSettings.pattern.toCharArray();
+                pattern[col] = value ? 'x' : '_';
+                trackSettings.pattern = new String(pattern);
+            }
+        });
+        int trackCount = mTrackSettings.size();
+        int patternLength = mTrackSettings.get(0).pattern.length();
+        boolean[][] pattern = new boolean[patternLength][trackCount];
+        for (int r = 0; r < trackCount; r++) {
+            for (int c = 0; c < patternLength; c++) {
+                pattern[c][r] = mTrackSettings.get(r).pattern.charAt(c) == 'x';
+            }
+        }
+        mGridView.setPattern(pattern);
     }
 
     private void initTrackSettings() {
-        mTrackSettings = new Vector<>();
-        for (int i = 0; i < TRACK_NUM; i++) {
-            TrackSettings ts = new TrackSettings(i, TrackSettings.ARDUINO_PINS[i]);
-            mTrackSettings.add(ts);
+        mTrackSettings = (Vector<TrackSettings>) Tools.getPreferenceSerializable(this, Static.TRACK_SETTINGS);
+        if(mTrackSettings == null) {
+            mTrackSettings = new Vector<>();
+            for (int i = 0; i < TRACK_NUM; i++) {
+                TrackSettings ts = new TrackSettings(i, TrackSettings.ARDUINO_PINS[i]);
+                mTrackSettings.add(ts);
+            }
         }
     }
 
@@ -208,27 +234,6 @@ public class MainActivity extends AppCompatActivity
             mSeekbarContainer2.addView(sb, params);
             mDurationSeekbars.add(sb);
         }
-    }
-
-
-    private boolean[][] createInitPattern() {
-        String pattern1[] = {
-                "x_______x________",
-                "_x______x________",
-                "__x_____x________",
-                "___x____x________",
-                "____x___x________",
-                "_____x__x________",
-                "______x_x________",
-                "_______xx________",
-        };
-        boolean[][] result = new boolean[pattern1[0].length()][pattern1.length];
-        for (int r = 0; r < pattern1.length; r++) {
-            for (int c = 0; c < pattern1[0].length(); c++) {
-                result[c][r] = pattern1[r].charAt(c) == 'x';
-            }
-        }
-        return result;
     }
 
     @Override

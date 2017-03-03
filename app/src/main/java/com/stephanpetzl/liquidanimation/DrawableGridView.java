@@ -13,11 +13,17 @@ import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.Vector;
+
 /**
  * Created by steph on 01/03/17.
  */
 
 public class DrawableGridView extends View {
+
+    public interface OnDrawableGridChanged{
+        void onDrawableGridChanged(int trackNum, int col, boolean value);
+    }
 
     private int mCols = 16;
     private int mRows = 8;
@@ -26,6 +32,11 @@ public class DrawableGridView extends View {
     private int mBorderWidth = 2;
     private boolean[][] mPattern;
     private int mSelectedCol = -1;
+    private OnDrawableGridChanged mOnDrawableGridChangedListener;
+
+    public void setOnDrawableGridChangedListener(OnDrawableGridChanged onDrawableGridChangedListener) {
+        mOnDrawableGridChangedListener = onDrawableGridChangedListener;
+    }
 
     public void setSelectedCol(int selectedCol) {
         mSelectedCol = selectedCol;
@@ -105,6 +116,9 @@ public class DrawableGridView extends View {
                 if(mActivate != null) {
                     if(mPattern[colIndex][rowIndex] != mActivate) {
                         mPattern[colIndex][rowIndex] = mActivate;
+                        if(mOnDrawableGridChangedListener != null) {
+                            mOnDrawableGridChangedListener.onDrawableGridChanged(rowIndex, colIndex, mActivate);
+                        }
                         invalidate();
                     }
                 }
