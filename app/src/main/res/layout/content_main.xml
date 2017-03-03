@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:activity="com.stephanpetzl.liquidanimation.MainActivity"
+    tools:showIn="@layout/app_bar_main">
+
+
+    <com.stephanpetzl.liquidanimation.DrawableGridView
+        android:id="@+id/drawable_grid_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/button_bar"
+        />
+
+    <LinearLayout
+        android:id="@+id/timing_seekbar_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/button_bar"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/seekbar_container1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="@dimen/line_width"
+            android:layout_weight="1"
+            android:background="@color/transparent_white"
+            android:orientation="vertical">
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/seekbar_container2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/transparent_white"
+            android:orientation="vertical">
+
+            <!--  <SeekBar
+                  android:id="@+id/seekBarDuration"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>
+
+              <SeekBar
+                  android:id="@+id/seekBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>
+
+              <SeekBar
+                  android:id="@+id/seekBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>
+
+              <SeekBar
+                  android:id="@+id/seekBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>
+
+              <SeekBar
+                  android:id="@+id/seekBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>
+
+              <SeekBar
+                  android:id="@+id/seekBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>
+
+              <SeekBar
+                  android:id="@+id/seekBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>
+
+              <SeekBar
+                  android:id="@+id/seekBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"/>-->
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/button_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+
+        <ToggleButton
+            android:id="@+id/toggle_play"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textOff="Start"
+            android:textOn="Stop"/>
+
+        <ToggleButton
+            android:id="@+id/toggle_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textOff="Set timing"
+            android:textOn="Set pattern"/>
+
+    </LinearLayout>
+</RelativeLayout>
