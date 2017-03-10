@@ -5,7 +5,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -41,20 +43,23 @@ public class BluetoothConnector {
     }
 
     private void connect() {
+
+        log("mIsConnecting:" + mIsConnecting);
         if (mIsConnecting) {
             return;
         }
         mIsConnecting = true;
 
-        new Thread(new Runnable() {
-            public void run() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
 
-
-                Log.v("Bluetooth", "Initializing bluetooth connector...");
+                log("Set mIsConnecting = true;");
+                log("Initializing bluetooth connector... ");
                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
                 if (bluetoothAdapter == null) {
-                    Toast.makeText(mActivity, "Device doesnt Support Bluetooth", Toast.LENGTH_SHORT).show();
+                    log("Device doesnt Support Bluetooth");
                 }
                 if (!bluetoothAdapter.isEnabled()) {
                     Intent enableAdapter = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -64,14 +69,14 @@ public class BluetoothConnector {
                 Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
                 String deviceName = "LiquidLight";
                 if (bondedDevices.isEmpty()) {
-                    Toast.makeText(mActivity, "Please Pair the Device first", Toast.LENGTH_LONG).show();
+                    log("Please Pair the Device first");
                 } else {
                     for (BluetoothDevice iterator : bondedDevices) {
 
                         if (iterator.getName().equals(deviceName)) //Replace with iterator.getName() if comparing Device names.
                         {
                             device = iterator; //device is an object of type BluetoothDevice
-                            Log.v("Bluetooth", "Device " + deviceName + " found");
+                            log("Device \"" + deviceName + "\" found");
                             break;
                         }
                     }
@@ -83,59 +88,67 @@ public class BluetoothConnector {
                         mOutputStream = socket.getOutputStream();
                         mInputStream = socket.getInputStream();
 
-                        Log.v("Bluetooth", "Bluetooth paired successfully!");
-                    } catch (IOException e) {
+                        log("Bluetooth paired successfully!");
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 } else {
-                    Toast.makeText(mActivity, "No device with name " + deviceName + " found!", Toast.LENGTH_LONG).show();
+                    log("No device with name " + deviceName + " found!");
                 }
                 mIsConnecting = false;
+                log("Set mIsConnecting = false;");
+                return null;
             }
-        }).run();
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+
+    }
+
+    private void log(String message) {
+        Log.v("BluetoothConnector", message);
     }
 
 
     private void setupReadThread() {
-        mStopThread = false;
         mBuffer = new byte[1024];
-        Thread thread = new Thread(new Runnable() {
-            public void run() {
+        new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
                 while (!Thread.currentThread().isInterrupted() && !mStopThread) {
                     try {
                         if (mInputStream == null) {
-                            Log.v("Bluetooth", "Disconnected... trying to reconnect in 3 seconds...");
-                            Thread.currentThread().sleep(3000);
-                            //connect();
+                            log("Disconnected... trying to reconnect in 5 seconds...");
+                            Thread.currentThread().sleep(5000);
+                            connect();
                             continue;
                         }
                         int byteCount = mInputStream.available();
                         if (byteCount > 0) {
-                            Log.v("Bluetooth", "received " + byteCount + " bytes");
+                            //log("received " + byteCount + " bytes");
                             byte[] rawBytes = new byte[byteCount];
                             mInputStream.read(rawBytes);
                             final String string = new String(rawBytes, "UTF-8");
                             mHandler.post(new Runnable() {
                                 public void run() {
-                                    Log.v("Bluetooth", "received:" + string);
+                                    Log.v("BluetoothReceiver", string);
                                 }
                             });
 
                         }
                     } catch (IOException ex) {
                         ex.printStackTrace();
-                        mStopThread = true;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
+                return null;
             }
-        });
-        thread.start();
+        }.execute();
     }
 
     public void send(final String str) {
-        Log.v("Bluetooth", "sending: " + str);
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -143,15 +156,14 @@ public class BluetoothConnector {
                 try {
                     if (mOutputStream != null) {
                         mOutputStream.write(str.getBytes());
-                        Log.v("Bluetooth", "sent");
-                    }else{
-                        Log.v("Bluetooth", "Disconnected... trying to reconnect in 3 seconds...");
-                        //Thread.sleep(3000);
-                        //connect();
+                        //log("sending: " + str);
+                    } else {
+                        throw new IOException("Disconnected- can't send");
                     }
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    connect();
                 }
             }
         });

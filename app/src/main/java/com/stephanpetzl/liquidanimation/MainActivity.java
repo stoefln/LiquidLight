@@ -7,12 +7,17 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
@@ -47,7 +52,7 @@ public class MainActivity extends AppCompatActivity
                 for (int i = 0; i < column.length; i++) {
                     if (column[i]) { // if active
                         TrackSettings ts = mTrackSettings.get(i);
-                        String cmd = "p" + ts.arduinoPin + "t" + (int) ts.timingOffsetMillis + "d" + (int) ts.durationMillis + ";";
+                        String cmd = "p" + ts.trackNumber + "t" + (int) ts.timingOffsetMillis + "d" + (int) ts.durationMillis + ";";
                         mBluetooth.send(cmd);
                     }
                 }
@@ -58,12 +63,17 @@ public class MainActivity extends AppCompatActivity
     private OutputStream mOutputStream;
     private InputStream mInputStream;
     private BluetoothConnector mBluetooth;
-    private LinearLayout mSeekbarContainer1;
-    private LinearLayout mSeekbarContainer2;
+    private LinearLayout mTimingOffsetSeekbarContainer;
+    private LinearLayout mDurationSeekbarContainer;
     private SeekBar.OnSeekBarChangeListener mTimingOffsetChanged;
     private SeekBar.OnSeekBarChangeListener mDurationChanged;
     private View mSeekbarContainer;
     private ToggleButton mToggleView;
+    private View mButtonBar;
+    private View mResetParamsButton;
+    private RadioButton mTimingCheckbox;
+    private RadioButton mDurationCheckbox;
+    private View mMenuButton;
 
 
     public void stopSequencer() {
@@ -92,19 +102,33 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mGridView = (DrawableGridView) findViewById(R.id.drawable_grid_view);
         mTogglePlay = (ToggleButton) findViewById(R.id.toggle_play);
         mToggleView = (ToggleButton) findViewById(R.id.toggle_view);
-        mSeekbarContainer1 = (LinearLayout) findViewById(R.id.seekbar_container1);
-        mSeekbarContainer2 = (LinearLayout) findViewById(R.id.seekbar_container2);
+        mTimingOffsetSeekbarContainer = (LinearLayout) findViewById(R.id.timing_offset_seekbar_container);
+        mDurationSeekbarContainer = (LinearLayout) findViewById(R.id.duration_seekbar_container);
         mSeekbarContainer = findViewById(R.id.timing_seekbar_container);
+        mResetParamsButton = findViewById(R.id.reset_button);
+        mTimingCheckbox = (RadioButton) findViewById(R.id.timing_check);
+        mDurationCheckbox = (RadioButton) findViewById(R.id.duration_check);
+        mButtonBar = findViewById(R.id.button_bar);
+        mMenuButton = findViewById(R.id.menu_button);
 
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);*/
 
+        CompoundButton.OnCheckedChangeListener updateViewHandler = new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                updateViews();
+            }
+        };
+        mDurationCheckbox.setOnCheckedChangeListener(updateViewHandler);
+        mTimingCheckbox.setOnCheckedChangeListener(updateViewHandler);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
@@ -113,26 +137,19 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        mToggleView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        mToggleView.setOnCheckedChangeListener(updateViewHandler);
+        mResetParamsButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
-                    mSeekbarContainer.setVisibility(View.VISIBLE);
-                }else{
-                    mSeekbarContainer.setVisibility(View.GONE);
+            public void onClick(View view) {
+                if(mDurationCheckbox.isChecked()) {
+                    for (SeekBar seekBar : mDurationSeekbars) {
+                        seekBar.setProgress(mDurationSeekbars.get(0).getProgress());
+                    }
+                } else {
+                    for (SeekBar seekBar : mTimingOffsetSeekbars) {
+                        seekBar.setProgress(mTimingOffsetSeekbars.get(0).getProgress());
+                    }
                 }
-            }
-        });
-        mToggleView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                for (SeekBar seekBar : mDurationSeekbars) {
-                    seekBar.setProgress(mDurationSeekbars.get(0).getProgress());
-                }
-                for (SeekBar seekBar : mTimingOffsetSeekbars) {
-                    seekBar.setProgress(mTimingOffsetSeekbars.get(0).getProgress());
-                }
-                return false;
             }
         });
         mTogglePlay.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -146,6 +163,15 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        mMenuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                drawer.openDrawer(Gravity.LEFT);
+            }
+        });
+
+        //drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
         mBluetooth = new BluetoothConnector(this);
         mBluetooth.init();
 
@@ -155,7 +181,13 @@ public class MainActivity extends AppCompatActivity
 
         initDrawableGrid();
 
+        updateViews();
+    }
 
+    private void updateViews() {
+        mSeekbarContainer.setVisibility(mToggleView.isChecked() ? View.VISIBLE : View.GONE);
+        mTimingOffsetSeekbarContainer.setVisibility(mTimingCheckbox.isChecked() ? View.VISIBLE : View.GONE);
+        mDurationSeekbarContainer.setVisibility(mDurationCheckbox.isChecked() ? View.VISIBLE : View.GONE);
     }
 
     private void initDrawableGrid() {
@@ -215,7 +247,7 @@ public class MainActivity extends AppCompatActivity
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0);
             params.weight = 1;
             sb.setOnSeekBarChangeListener(mTimingOffsetChanged);
-            mSeekbarContainer1.addView(sb, params);
+            mTimingOffsetSeekbarContainer.addView(sb, params);
             mTimingOffsetSeekbars.add(sb);
         }
     }
@@ -245,7 +277,7 @@ public class MainActivity extends AppCompatActivity
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0);
             params.weight = 1;
             sb.setOnSeekBarChangeListener(mDurationChanged);
-            mSeekbarContainer2.addView(sb, params);
+            mDurationSeekbarContainer.addView(sb, params);
             mDurationSeekbars.add(sb);
         }
     }
@@ -288,14 +320,8 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
+        if (id == R.id.nav_manage) {
+            mButtonBar.setVisibility(mButtonBar.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {

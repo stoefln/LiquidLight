@@ -113,7 +113,7 @@ public class DrawableGridView extends View {
                     Log.v("DrawableGrid", "ACTION_UP x: "+ x + " \ty:" + y+ " ci: "+colIndex+ " ri: "+rowIndex);
                     mActivate = null;
                 }
-                if(mActivate != null) {
+                if(mActivate != null && colIndex < mPattern.length && rowIndex < mPattern[rowIndex].length) {
                     if(mPattern[colIndex][rowIndex] != mActivate) {
                         mPattern[colIndex][rowIndex] = mActivate;
                         if(mOnDrawableGridChangedListener != null) {
@@ -139,13 +139,13 @@ public class DrawableGridView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        float cellWidth = getWidth() / mCols;
-        float cellHeight = getHeight() / mRows;
+        float cellWidth = (float) getWidth() / mCols;
+        float cellHeight = (float) getHeight() / mRows;
 
         for (int r = 0; r < mRows; r++) {
             for (int c = 0; c < mCols; c++) {
-                float x = c * cellWidth;
-                float y = r * cellHeight;
+                float x = (float) c * cellWidth;
+                float y = (float) r * cellHeight;
                 mPaint.setColor(mColors[0]);
                 canvas.drawRect(x, y, x + cellWidth, y + cellHeight, mPaint);
                 if(mPattern[c][r]) {
