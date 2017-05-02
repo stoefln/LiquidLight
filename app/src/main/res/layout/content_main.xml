@@ -13,10 +13,6 @@
     tools:activity="com.stephanpetzl.liquidanimation.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <com.stephanpetzl.liquidanimation.SquareLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_centerInParent="true">
 
         <com.stephanpetzl.liquidanimation.DrawableGridView
             android:id="@+id/drawable_grid_view"
@@ -165,5 +161,4 @@
                 android:textOn="Set pattern"/>
 
         </LinearLayout>
-    </com.stephanpetzl.liquidanimation.SquareLayout>
 </RelativeLayout>

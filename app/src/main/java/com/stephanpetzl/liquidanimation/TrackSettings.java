@@ -14,7 +14,7 @@ public class TrackSettings implements Serializable {
 
     public final int arduinoPin;
     public int trackNumber;
-    public String pattern = "_____x_____x________";
+    public String pattern = "_____x_____x________________x_____x___________";
     public float timingOffsetMillis;
     public float durationMillis;
 
