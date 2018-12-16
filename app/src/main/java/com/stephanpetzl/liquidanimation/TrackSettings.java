@@ -14,14 +14,19 @@ public class TrackSettings implements Serializable {
 
     public final int arduinoPin;
     public int trackNumber;
-    public String pattern = "_____x_____x________________x_____x___________";
+    public String pattern;
     public float timingOffsetMillis;
     public float durationMillis;
 
-    public TrackSettings(int trackNumber, int arduinoPin) {
+    public TrackSettings(int trackNumber, int arduinoPin, int patternLength) {
         this.trackNumber = trackNumber;
         this.arduinoPin = arduinoPin;
         this.timingOffsetMillis = 0;
         this.durationMillis = MAX_DURATION / 2;
+
+        this.pattern = "";
+        for (int i =0; i < patternLength; i++) {
+            this.pattern +=  "_";
+        }
     }
 }

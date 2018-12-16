@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.stephanpetzl.liquidanimation.R.id.content_main;
 import static com.stephanpetzl.liquidanimation.R.id.textView;
 
 /**
@@ -59,7 +60,8 @@ public class BluetoothConnector {
                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
                 if (bluetoothAdapter == null) {
-                    log("Device doesnt Support Bluetooth");
+                    log(mActivity.getResources().getString(R.string.does_not_support_bluetooth));
+                    return null;
                 }
                 if (!bluetoothAdapter.isEnabled()) {
                     Intent enableAdapter = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);

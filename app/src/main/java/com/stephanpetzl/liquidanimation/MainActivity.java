@@ -7,17 +7,18 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.CheckBox;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
@@ -74,6 +75,9 @@ public class MainActivity extends AppCompatActivity
     private RadioButton mTimingCheckbox;
     private RadioButton mDurationCheckbox;
     private View mMenuButton;
+    private Button mNextButton;
+    private Button mPrevButton;
+    private Button mPageNumberButton;
 
 
     public void stopSequencer() {
@@ -106,6 +110,9 @@ public class MainActivity extends AppCompatActivity
         mGridView = (DrawableGridView) findViewById(R.id.drawable_grid_view);
         mTogglePlay = (ToggleButton) findViewById(R.id.toggle_play);
         mToggleView = (ToggleButton) findViewById(R.id.toggle_view);
+        mNextButton = (Button) findViewById(R.id.next_button);
+        mPrevButton = (Button) findViewById(R.id.prev_button);
+        mPageNumberButton = (Button) findViewById(R.id.page_number_button);
         mTimingOffsetSeekbarContainer = (LinearLayout) findViewById(R.id.timing_offset_seekbar_container);
         mDurationSeekbarContainer = (LinearLayout) findViewById(R.id.duration_seekbar_container);
         mSeekbarContainer = findViewById(R.id.timing_seekbar_container);
@@ -156,6 +163,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
+                    mGridView.selectFirstColOfCurrentPage();
                     startSequencer();
                 } else {
                     stopSequencer();
@@ -167,6 +175,30 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 drawer.openDrawer(Gravity.LEFT);
+            }
+        });
+
+        mPrevButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mGridView.prevPage();
+                mPageNumberButton.setText((mGridView.getCurrentPageIndex() + 1) + "");
+            }
+        });
+
+        mNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mGridView.nextPage();
+                mPageNumberButton.setText((mGridView.getCurrentPageIndex() + 1) + "");
+            }
+        });
+
+        mPageNumberButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mGridView.setCurrentPageIndex(0);
+                mPageNumberButton.setText("1");
             }
         });
 
@@ -213,10 +245,11 @@ public class MainActivity extends AppCompatActivity
 
     private void initTrackSettings() {
         mTrackSettings = (Vector<TrackSettings>) Tools.getPreferenceSerializable(this, Static.TRACK_SETTINGS);
-        if(mTrackSettings == null) {
+        if(mTrackSettings == null || mTrackSettings.get(0).pattern.length() != DrawableGridView.COLS_TOTAL) {
+            Log.v("MainActivity","Create new tracks");
             mTrackSettings = new Vector<>();
             for (int i = 0; i < TRACK_NUM; i++) {
-                TrackSettings ts = new TrackSettings(i, TrackSettings.ARDUINO_PINS[i]);
+                TrackSettings ts = new TrackSettings(i, TrackSettings.ARDUINO_PINS[i], DrawableGridView.COLS_TOTAL);
                 mTrackSettings.add(ts);
             }
         }

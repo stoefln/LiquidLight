@@ -13,20 +13,25 @@ import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.util.Vector;
-
 /**
  * Created by steph on 01/03/17.
  */
 
 public class DrawableGridView extends View {
 
+
+
     public interface OnDrawableGridChanged{
         void onDrawableGridChanged(int trackNum, int col, boolean value);
     }
 
-    private int mCols = 16;
-    private int mRows = 8;
+    private static int ROWS = 8;
+    private static int PAGE_COUNT = 4;
+    private static int COLS_PER_PAGE = 40;
+    public static int COLS_TOTAL = COLS_PER_PAGE * PAGE_COUNT;
+
+    private int mCurrentPageIndex = 0;
+
     private Paint mPaint;
     private int[] mColors;
     private int mBorderWidth = 2;
@@ -85,7 +90,7 @@ public class DrawableGridView extends View {
                 ContextCompat.getColor(context, R.color.colorAccentLight)
         };
         mPaint.setColor(mColors[0]);
-        mPattern = new boolean[mCols][mRows];
+        mPattern = new boolean[COLS_TOTAL][ROWS];
 
         setOnTouchListener(new OnTouchListener() {
             private Boolean mActivate;
@@ -100,9 +105,9 @@ public class DrawableGridView extends View {
                 }
 
 
-                final float cellWidth = width / mCols;
-                final float cellHeight = getHeight() / mRows;
-                int colIndex = (int) (x / cellWidth);
+                final float cellWidth = width / COLS_PER_PAGE;
+                final float cellHeight = getHeight() / ROWS;
+                int colIndex = (int) (x / cellWidth) + mCurrentPageIndex * COLS_PER_PAGE;
                 int rowIndex = (int) (y / cellHeight);
 
                 if(event.getAction() == MotionEvent.ACTION_DOWN){
@@ -139,19 +144,21 @@ public class DrawableGridView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        float cellWidth = (float) getWidth() / mCols;
-        float cellHeight = (float) getHeight() / mRows;
+        float cellWidth = (float) getWidth() / COLS_PER_PAGE;
+        float cellHeight = (float) getHeight() / ROWS;
 
-        for (int r = 0; r < mRows; r++) {
-            for (int c = 0; c < mCols; c++) {
+        for (int r = 0; r < ROWS; r++) {
+
+            for (int c = 0; c < COLS_PER_PAGE; c++) {
                 float x = (float) c * cellWidth;
                 float y = (float) r * cellHeight;
                 mPaint.setColor(mColors[0]);
                 canvas.drawRect(x, y, x + cellWidth, y + cellHeight, mPaint);
-                if(mPattern[c][r]) {
-                    mPaint.setColor(c == mSelectedCol ? mColors[3] : mColors[2]);
+                int col = mCurrentPageIndex * COLS_PER_PAGE + c;
+                if(mPattern[col][r]) {
+                    mPaint.setColor(col == mSelectedCol ? mColors[3] : mColors[2]);
                 } else {
-                    mPaint.setColor(c == mSelectedCol ? mColors[0] : mColors[1]);
+                    mPaint.setColor(col == mSelectedCol ? mColors[0] : mColors[1]);
                 }
                 canvas.drawRect(x + mBorderWidth, y + mBorderWidth, x + cellWidth - mBorderWidth, y + cellHeight - mBorderWidth, mPaint);
 
@@ -160,12 +167,43 @@ public class DrawableGridView extends View {
     }
 
     public void next() {
-        setSelectedCol((mSelectedCol+1) % mCols);
+        setSelectedCol((mSelectedCol+1) % COLS_TOTAL);
+    }
+
+
+    public void selectFirstColOfCurrentPage() {
+        setSelectedCol(COLS_PER_PAGE * mCurrentPageIndex);
+    }
+
+    public void setCurrentPageIndex(int pageIndex){
+        mCurrentPageIndex = pageIndex;
+        invalidate();
+    }
+
+    public int getCurrentPageIndex() {
+        return mCurrentPageIndex;
+    }
+
+    public void nextPage(){
+        mCurrentPageIndex = (mCurrentPageIndex + 1) % PAGE_COUNT;
+        invalidate();
+    }
+    public void prevPage(){
+        mCurrentPageIndex--;
+        if(mCurrentPageIndex < 0){
+            mCurrentPageIndex = PAGE_COUNT - 1;
+        }
+        invalidate();
     }
 
     public void setPattern(boolean pattern[][]){
-        mPattern = pattern;
-        mCols = pattern.length;
-        mRows = pattern[0].length;
+        for (int c = 0; c < COLS_TOTAL; c++) {
+            for (int r = 0; r < ROWS; r++) {
+                mPattern[c][r] = false;
+                if (pattern.length > c && pattern[c].length > r){
+                    mPattern[c][r] = pattern[c][r];
+                }
+            }
+        }
     }
 }

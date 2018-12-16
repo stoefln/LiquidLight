@@ -152,6 +152,27 @@
                 android:textOff="Start"
                 android:textOn="Stop"/>
 
+            <Button
+                android:id="@+id/prev_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/prev"/>
+
+            <Button
+                android:id="@+id/page_number_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:text="1"/>
+
+            <Button
+                android:id="@+id/next_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/next"/>
+
             <ToggleButton
                 android:id="@+id/toggle_view"
                 android:layout_width="0dp"
